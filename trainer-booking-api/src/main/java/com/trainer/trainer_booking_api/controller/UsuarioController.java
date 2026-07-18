@@ -1,7 +1,7 @@
 package com.trainer.trainer_booking_api.controller;
 
-import com.trainer.trainer_booking_api.entity.Usuario;
-import com.trainer.trainer_booking_api.repository.UsuarioRepository;
+import com.trainer.trainer_booking_api.dto.response.UsuarioResponseDTO;
+import com.trainer.trainer_booking_api.service.UsuarioService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,29 +10,24 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
     }
 
-    // GET /api/usuarios -> Devuelve TODOS los usuarios
     @GetMapping
-    public List<Usuario> obtenerTodos() {
-        return usuarioRepository.findAll();
+    public List<UsuarioResponseDTO> obtenerTodos() {
+        return usuarioService.obtenerTodos();
     }
 
-    // GET /api/usuarios/1 -> Devuelve el usuario con ID 1
     @GetMapping("/{id}")
-    public Usuario obtenerPorId(@PathVariable Integer id) {
-        return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+    public UsuarioResponseDTO obtenerPorId(@PathVariable Integer id) {
+        return usuarioService.obtenerPorId(id);
     }
 
-    // GET /api/usuarios/correo/juan@email.com -> Busca por correo (método mágico del Repository)
     @GetMapping("/correo/{correo}")
-    public Usuario obtenerPorCorreo(@PathVariable String correo) {
-        return usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
+    public UsuarioResponseDTO obtenerPorCorreo(@PathVariable String correo) {
+        return usuarioService.obtenerPorCorreo(correo);
     }
 }

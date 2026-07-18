@@ -1,7 +1,7 @@
 package com.trainer.trainer_booking_api.controller;
 
-import com.trainer.trainer_booking_api.entity.Rol;
-import com.trainer.trainer_booking_api.repository.RolRepository;
+import com.trainer.trainer_booking_api.dto.response.RolResponseDTO;
+import com.trainer.trainer_booking_api.service.RolService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,24 +10,19 @@ import java.util.List;
 @RequestMapping("/api/roles")
 public class RolController {
 
-    private final RolRepository rolRepository;
+    private final RolService rolService;
 
-    // Inyección de dependencias por constructor
-    // Spring "inyecta" automáticamente el Repository aquí
-    public RolController(RolRepository rolRepository) {
-        this.rolRepository = rolRepository;
+    public RolController(RolService rolService) {
+        this.rolService = rolService;
     }
 
-    // GET /api/roles -> Devuelve TODOS los roles
     @GetMapping
-    public List<Rol> obtenerTodos() {
-        return rolRepository.findAll();
+    public List<RolResponseDTO> obtenerTodos() {
+        return rolService.obtenerTodos();
     }
 
-    // GET /api/roles/1 -> Devuelve el rol con ID 1
     @GetMapping("/{id}")
-    public Rol obtenerPorId(@PathVariable Integer id) {
-        return rolRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado con id: " + id));
+    public RolResponseDTO obtenerPorId(@PathVariable Integer id) {
+        return rolService.obtenerPorId(id);
     }
 }
