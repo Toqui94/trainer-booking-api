@@ -40,7 +40,7 @@ public class EntrenadorService {
         );
     }
 
-    // ========== READ (Ya lo tenías) ==========
+    // ========== READ  ==========
     public List<EntrenadorResponseDTO> obtenerTodos() {
         return entrenadorRepository.findAll()
                 .stream()
@@ -129,7 +129,7 @@ public class EntrenadorService {
         return convertirADTO(actualizado);
     }
 
-    // ========== DELETE (NUEVO) ==========
+    // ========== DELETE  ==========
     public void eliminarEntrenador(Integer id) {
         if (!entrenadorRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id);

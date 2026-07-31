@@ -10,16 +10,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;  // NUEVO
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, 
+                          PasswordEncoder passwordEncoder) {  // NUEVO
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;  // NUEVO
     }
-
+    
+    // ... resto del código ...
     // ========== MÉTODO PRIVADO: Convertir Entity a ResponseDTO ==========
     private UsuarioResponseDTO convertirADTO(Usuario usuario) {
         return new UsuarioResponseDTO(
@@ -66,7 +71,7 @@ public class UsuarioService {
         usuario.setApellido(dto.getApellido());
         usuario.setCorreo(dto.getCorreo());
         usuario.setTelefono(dto.getTelefono());
-        usuario.setPassword(dto.getPassword()); // Por ahora en texto plano. En Fase 5 encriptamos.
+        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setEstado(EstadoUsuario.ACTIVO);
 
         // Guardamos en la base de datos
@@ -97,8 +102,8 @@ public class UsuarioService {
         
         // Solo actualizamos password si viene algo nuevo (opcional en un PUT)
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            usuario.setPassword(dto.getPassword());
-        }
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+}
 
         // Guardamos los cambios
         Usuario actualizado = usuarioRepository.save(usuario);
