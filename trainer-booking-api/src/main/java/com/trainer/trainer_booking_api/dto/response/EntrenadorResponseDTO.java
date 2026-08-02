@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public class EntrenadorResponseDTO {
     private Integer id;
+    private String nombreCompleto;
     private String documento;
     private String descripcion;
     private Integer aniosExperiencia;
@@ -15,10 +16,11 @@ public class EntrenadorResponseDTO {
 
     public EntrenadorResponseDTO() {}
 
-    public EntrenadorResponseDTO(Integer id, String documento, String descripcion, 
-                                 Integer aniosExperiencia, String foto, String ciudad,
-                                 String estadoVerificacion, BigDecimal calificacion, String idiomas) {
+    public EntrenadorResponseDTO(Integer id, String nombreCompleto, String documento, String descripcion, 
+                                Integer aniosExperiencia, String foto, String ciudad,
+                                String estadoVerificacion, BigDecimal calificacion, String idiomas) {
         this.id = id;
+        this.nombreCompleto = nombreCompleto;   // ← AGREGAR ESTA LÍNEA
         this.documento = documento;
         this.descripcion = descripcion;
         this.aniosExperiencia = aniosExperiencia;
@@ -29,7 +31,12 @@ public class EntrenadorResponseDTO {
         this.idiomas = idiomas;
     }
 
-    // Getters y Setters 
+
+
+    // Getters y Setters
+    public String getNombreCompleto() { return nombreCompleto; }
+    public void setNombreCompleto(String nombreCompleto) { this.nombreCompleto = nombreCompleto; } 
+    
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

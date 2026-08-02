@@ -20,9 +20,10 @@ public class Cliente {
     @Column(name = "id_cliente")
     private Integer idCliente;
 
-    // Por ahora, la FK es solo un número. Luego la convertiremos en una relación real.
-    @Column(name = "id_usuario", nullable = false, unique = true)
-    private Integer idUsuario;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", nullable = false, unique = true)
+    private Usuario usuario;
 
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;

@@ -19,9 +19,10 @@ public class Entrenador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_entrenador")
     private Integer idEntrenador;
-
-    @Column(name = "id_usuario", nullable = false, unique = true)
-    private Integer idUsuario;
+    
+    @OneToOne(fetch = FetchType.EAGER)  // LAZY = "no traigas el usuario hasta que lo pidan"
+    @JoinColumn(name = "id_usuario", nullable = false, unique = true)
+    private Usuario usuario;
 
     @Column(length = 30)
     private String documento;

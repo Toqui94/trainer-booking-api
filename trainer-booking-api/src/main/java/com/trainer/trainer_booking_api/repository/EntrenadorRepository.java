@@ -10,9 +10,8 @@ import java.util.Optional;
 @Repository
 public interface EntrenadorRepository extends JpaRepository<Entrenador, Integer> {
 
-    Optional<Entrenador> findByIdUsuario(Integer idUsuario);
+    Optional<Entrenador> findByUsuario_IdUsuario(Integer idUsuario);   // ← cambiar esta línea
 
     List<Entrenador> findByCiudad(String ciudad);
-
     List<Entrenador> findByEstadoVerificacion(String estadoVerificacion);
 }
