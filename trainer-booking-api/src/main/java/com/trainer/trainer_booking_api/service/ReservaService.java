@@ -3,6 +3,8 @@ package com.trainer.trainer_booking_api.service;
 import com.trainer.trainer_booking_api.dto.request.ReservaRequestDTO;
 import com.trainer.trainer_booking_api.dto.response.ReservaResponseDTO;
 import com.trainer.trainer_booking_api.entity.*;
+import com.trainer.trainer_booking_api.entity.enums.EstadoPago;
+import com.trainer.trainer_booking_api.entity.enums.EstadoPagoEntrenador;
 import com.trainer.trainer_booking_api.entity.enums.EstadoReserva;
 import com.trainer.trainer_booking_api.exception.RecursoNoEncontradoException;
 import com.trainer.trainer_booking_api.repository.*;
@@ -21,17 +23,29 @@ public class ReservaService {
     private final EntrenadorRepository entrenadorRepository;
     private final ServicioRepository servicioRepository;
     private final HistorialReservaRepository historialReservaRepository;
+    private final PagoRepository pagoRepository;
+    private final PagoEntrenadorRepository pagoEntrenadorRepository;
+    private final NotificacionRepository notificacionRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public ReservaService(ReservaRepository reservaRepository,
-                          ClienteRepository clienteRepository,
-                          EntrenadorRepository entrenadorRepository,
-                          ServicioRepository servicioRepository,
-                          HistorialReservaRepository historialReservaRepository) {
+                        ClienteRepository clienteRepository,
+                        EntrenadorRepository entrenadorRepository,
+                        ServicioRepository servicioRepository,
+                        HistorialReservaRepository historialReservaRepository,
+                        PagoRepository pagoRepository,
+                        PagoEntrenadorRepository pagoEntrenadorRepository,
+                        NotificacionRepository notificacionRepository,
+                        UsuarioRepository usuarioRepository) {
         this.reservaRepository = reservaRepository;
         this.clienteRepository = clienteRepository;
         this.entrenadorRepository = entrenadorRepository;
         this.servicioRepository = servicioRepository;
         this.historialReservaRepository = historialReservaRepository;
+        this.pagoRepository = pagoRepository;
+        this.pagoEntrenadorRepository = pagoEntrenadorRepository;
+        this.notificacionRepository = notificacionRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // ========== CONVERTIR A DTO ==========
@@ -126,8 +140,36 @@ public class ReservaService {
         historial.setEstadoNuevo(EstadoReserva.PENDIENTE.name());
         historialReservaRepository.save(historial);
 
+        // 9. CREAR PAGO DEL CLIENTE automáticamente
+        Pago pago = new Pago();
+        pago.setReserva(guardada);
+        pago.setMonto(guardada.getValor());
+        pago.setEstado(EstadoPago.PENDIENTE);
+        pagoRepository.save(pago);
+
+        // 10. CREAR PAGO AL ENTRENADOR automáticamente (comisión del 90%)
+        PagoEntrenador pagoEntrenador = new PagoEntrenador();
+        pagoEntrenador.setReserva(guardada);
+        pagoEntrenador.setEntrenador(entrenador);
+        // La plataforma se queda con 10%, el entrenador recibe 90%
+        pagoEntrenador.setValor(guardada.getValor().multiply(new BigDecimal("0.90")));
+        pagoEntrenador.setEstado(EstadoPagoEntrenador.PENDIENTE);
+        pagoEntrenadorRepository.save(pagoEntrenador);
+
+        // 11. NOTIFICAR al cliente
+        crearNotificacion(
+            cliente.getUsuario().getIdUsuario(),
+            "Reserva creada",
+            "Tu reserva para " + servicio.getNombreServicio() + " el " + guardada.getFecha() + " fue creada exitosamente. Estado: PENDIENTE."
+        );
+
+
         return convertirADTO(guardada);
+        
+        
     }
+
+    
 
     // ========== CONFIRMAR RESERVA ==========
     @Transactional
@@ -149,6 +191,13 @@ public class ReservaService {
         historial.setEstadoAnterior(estadoAnterior);
         historial.setEstadoNuevo(EstadoReserva.CONFIRMADA.name());
         historialReservaRepository.save(historial);
+
+        // Notificar al cliente
+        crearNotificacion(
+            reserva.getCliente().getUsuario().getIdUsuario(),
+            "Reserva confirmada",
+            "Tu reserva para " + reserva.getServicio().getNombreServicio() + " el " + reserva.getFecha() + " fue confirmada."
+        );
 
         return convertirADTO(actualizada);
     }
@@ -174,6 +223,13 @@ public class ReservaService {
         historial.setEstadoNuevo(EstadoReserva.CANCELADA.name());
         historialReservaRepository.save(historial);
 
+        // Notificar al cliente
+        crearNotificacion(
+            reserva.getCliente().getUsuario().getIdUsuario(),
+            "Reserva cancelada",
+            "Tu reserva para " + reserva.getServicio().getNombreServicio() + " el " + reserva.getFecha() + " fue cancelada."
+        );
+
         return convertirADTO(actualizada);
     }
 
@@ -197,6 +253,26 @@ public class ReservaService {
         historial.setEstadoNuevo(EstadoReserva.REALIZADA.name());
         historialReservaRepository.save(historial);
 
+        // Notificar al cliente que ya puede calificar
+        crearNotificacion(
+            reserva.getCliente().getUsuario().getIdUsuario(),
+            "¡Sesión completada!",
+            "Tu sesión con " + reserva.getEntrenador().getUsuario().getNombre() + " fue realizada. Ya puedes dejar tu calificación."
+        );
+
         return convertirADTO(actualizada);
     }
+
+    private void crearNotificacion(Integer idUsuario, String titulo, String mensaje) {
+    Usuario usuario = usuarioRepository.findById(idUsuario)
+            .orElse(null); // Si no existe, simplemente no creamos notificación
+    
+    if (usuario != null) {
+        Notificacion notificacion = new Notificacion();
+        notificacion.setUsuario(usuario);
+        notificacion.setTitulo(titulo);
+        notificacion.setMensaje(mensaje);
+        notificacionRepository.save(notificacion);
+    }
+}
 }
