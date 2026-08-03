@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ServicioRepository extends JpaRepository<Servicio, Integer> {
-    List<Servicio> findByEntrenadorIdEntrenador(Integer idEntrenador);
-    List<Servicio> findByEstadoTrue();
+
+    // Navega a través de la relación Servicio → Entrenador (mismo patrón que ya usaste)
+    List<Servicio> findByEntrenador_IdEntrenador(Integer idEntrenador);
 }
