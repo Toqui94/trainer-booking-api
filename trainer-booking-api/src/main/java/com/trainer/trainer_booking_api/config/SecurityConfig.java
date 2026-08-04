@@ -28,55 +28,54 @@ public class SecurityConfig {
         this.customUserDetailsService = customUserDetailsService;
     }
 
-    // ========== 1. ENCRIPTADOR DE PASSWORDS ==========
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-// ========== 2. PROVEEDOR DE AUTENTICACIÓN ==========
-@Bean
-public AuthenticationProvider authenticationProvider() {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
-    provider.setPasswordEncoder(passwordEncoder());
-    return provider;
-}
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
 
-    // ========== 3. AUTHENTICATION MANAGER (Para el login) ==========
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ========== 4. CADENA DE FILTROS DE SEGURIDAD ==========
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desactivar CSRF (no lo necesitamos en APIs REST stateless)
             .csrf(AbstractHttpConfigurer::disable)
-            
-            // Configurar autorización de URLs
             .authorizeHttpRequests(auth -> auth
-                // URLs PÚBLICAS (no necesitan token)
-                .requestMatchers("/api/auth/**").permitAll()      // Login y registro
-                .requestMatchers("/api/health").permitAll()       // Health check
+                // PÚBLICO
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/health").permitAll()
                 
-                // URLs PROTEGIDAS (necesitan token)
-                .requestMatchers("/api/usuarios/**").authenticated()
+                // SOLO ADMIN
+                .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/api/roles/**").hasRole("ADMINISTRADOR")
+                
+                // SOLO ENTRENADOR (crear servicios, ver sus pagos)
+                .requestMatchers("/api/servicios/**").hasAnyRole("ENTRENADOR", "ADMINISTRADOR")
+                .requestMatchers("/api/horarios/**").hasAnyRole("ENTRENADOR", "ADMINISTRADOR")
+                
+                // CLIENTE Y ADMIN (hacer reservas)
+                .requestMatchers("/api/reservas/**").hasAnyRole("CLIENTE", "ADMINISTRADOR")
+                
+                // Cualquiera logueado puede ver entrenadores y especialidades
                 .requestMatchers("/api/entrenadores/**").authenticated()
-                .requestMatchers("/api/roles/**").authenticated()
                 .requestMatchers("/api/especialidades/**").authenticated()
+                .requestMatchers("/api/notificaciones/**").authenticated()
                 
-                // Cualquier otra URL requiere autenticación
+                // Todo lo demás requiere login
                 .anyRequest().authenticated()
             )
-            
-            // No crear sesiones en el servidor (somos stateless, usamos JWT)
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            
-            // Agregar nuestro filtro JWT ANTES del filtro de username/password
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -9,36 +9,36 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
-@Component  // Spring la registra como un "componente" usable en cualquier parte
+@Component
 public class JwtUtil {
 
-    // Lee el valor de application.properties
     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    // Crea la llave secreta a partir del texto
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // ========== GENERAR TOKEN (La taquilla te da el boleto) ==========
-    public String generateToken(String correo) {
+    // ========== GENERAR TOKEN CON ROLES ==========
+    public String generateToken(String correo, List<String> roles) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
-                .subject(correo)                    // El "dueño" del boleto (su correo)
-                .issuedAt(now)                      // Fecha de emisión
-                .expiration(expiryDate)             // Fecha de vencimiento
-                .signWith(getSigningKey())          // Firma con la llave secreta
-                .compact();                         // Convierte a String
+                .subject(correo)
+                .claim("roles", String.join(",", roles))  // Guardamos roles como "CLIENTE,ENTRENADOR"
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
     }
 
-    // ========== EXTRAER EL CORREO DEL TOKEN (Leer quién es el dueño) ==========
+    // ========== EXTRAER CORREO ==========
     public String extractCorreo(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -49,27 +49,28 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
-    // ========== VALIDAR TOKEN (El escáner del concierto) ==========
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(token);
-            return true;  // Si no explota, el token es válido
-        } catch (Exception e) {
-            return false; // Token inválido, modificado o vencido
-        }
-    }
-
-    // ========== VERIFICAR SI ESTÁ VENCIDO ==========
-    public boolean isTokenExpired(String token) {
+    // ========== EXTRAER ROLES ==========
+    public List<String> extractRoles(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.getExpiration().before(new Date());
+        String rolesString = claims.get("roles", String.class);
+        return List.of(rolesString.split(","));
+    }
+
+    // ========== VALIDAR TOKEN ==========
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

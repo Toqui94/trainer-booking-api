@@ -1,5 +1,5 @@
 package com.trainer.trainer_booking_api.entity;
-
+import java.util.List;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,4 +24,7 @@ public class Especialidad {
 
     @Column(length = 50)
     private String icono;
+
+    @ManyToMany(mappedBy = "especialidades")
+    private List<Entrenador> entrenadores;
 }

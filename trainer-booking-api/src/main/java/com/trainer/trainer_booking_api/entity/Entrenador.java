@@ -1,5 +1,5 @@
 package com.trainer.trainer_booking_api.entity;
-
+import java.util.List;
 import com.trainer.trainer_booking_api.entity.enums.EstadoVerificacion;
 import jakarta.persistence.*;
 import lombok.*;
@@ -60,6 +60,14 @@ public class Entrenador {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToMany
+    @JoinTable(
+        name = "entrenador_especialidad",
+        joinColumns = @JoinColumn(name = "id_entrenador"),
+        inverseJoinColumns = @JoinColumn(name = "id_especialidad")
+    )
+    private List<Especialidad> especialidades;
 
     @PrePersist
     public void prePersist() {

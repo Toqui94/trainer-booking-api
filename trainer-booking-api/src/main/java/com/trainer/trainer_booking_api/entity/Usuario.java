@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "usuarios")
@@ -50,6 +52,14 @@ public class Usuario {
     @Column(name = "email_verificado")
     private Boolean emailVerificado = false;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "usuarios_roles",
+        joinColumns = @JoinColumn(name = "id_usuario"),
+        inverseJoinColumns = @JoinColumn(name = "id_rol")
+    )
+    private List<Rol> roles;
+    
     // Este método se ejecuta AUTOMATICAMENTE antes de guardar por primera vez
     @PrePersist
     public void prePersist() {

@@ -9,7 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -22,16 +23,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String correo) throws UsernameNotFoundException {
-        // Buscamos el usuario por correo
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + correo));
 
-        // Convertimos nuestro Usuario en un User de Spring Security
-        // Por ahora, TODOS los usuarios tienen rol "CLIENTE". Después conectaremos con la tabla usuarios_roles.
+        // Convertimos los roles de la BD en authorities de Spring Security
+        List<SimpleGrantedAuthority> authorities = usuario.getRoles().stream()
+                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombreRol()))
+                .collect(Collectors.toList());
+
         return new User(
                 usuario.getCorreo(),
                 usuario.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_CLIENTE"))
+                authorities  // Ahora son los roles reales de la base de datos
         );
     }
 }
