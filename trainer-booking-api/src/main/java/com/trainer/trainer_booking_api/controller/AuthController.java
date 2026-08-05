@@ -49,7 +49,7 @@ public class AuthController {
 
     // ========== LOGIN ==========
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDTO dto) {
         // 1. Intentar autenticar con Spring Security
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getCorreo(), dto.getPassword())
@@ -63,10 +63,19 @@ public class AuthController {
                 .collect(Collectors.toList());
         String token = jwtUtil.generateToken(dto.getCorreo(), roles);
 
+        // NUEVO: armamos la info del usuario que el frontend necesita para redirigir por rol
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("id_usuario", usuario.getIdUsuario());
+        userInfo.put("nombre", usuario.getNombre());
+        userInfo.put("apellido", usuario.getApellido());
+        userInfo.put("correo", usuario.getCorreo());
+        userInfo.put("roles", roles);
+
         // 3. Devolvemos el token al cliente
-        Map<String, String> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("tipo", "Bearer");
+        response.put("user", userInfo);
 
         return ResponseEntity.ok(response);
     }

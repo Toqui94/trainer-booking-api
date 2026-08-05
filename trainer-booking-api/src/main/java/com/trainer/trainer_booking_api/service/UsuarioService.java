@@ -5,8 +5,10 @@ import com.trainer.trainer_booking_api.dto.response.UsuarioResponseDTO;
 import com.trainer.trainer_booking_api.entity.Usuario;
 import com.trainer.trainer_booking_api.entity.enums.EstadoUsuario;
 import com.trainer.trainer_booking_api.exception.RecursoNoEncontradoException;
+import com.trainer.trainer_booking_api.repository.RolRepository;
 import com.trainer.trainer_booking_api.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import com.trainer.trainer_booking_api.entity.Rol;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,12 +18,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;  // NUEVO
+    private final PasswordEncoder passwordEncoder;
+    private final RolRepository rolRepository;  
 
     public UsuarioService(UsuarioRepository usuarioRepository, 
-                          PasswordEncoder passwordEncoder) {  // NUEVO
+                          PasswordEncoder passwordEncoder,
+                         RolRepository rolRepository) {  
         this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;  // NUEVO
+        this.passwordEncoder = passwordEncoder;  
+        this.rolRepository = rolRepository;
     }
     
     // ... resto del código ...
@@ -64,7 +69,17 @@ public class UsuarioService {
         if (usuarioRepository.findByCorreo(dto.getCorreo()).isPresent()) {
             throw new RuntimeException("Ya existe un usuario registrado con el correo: " + dto.getCorreo());
         }
+        // Determinar el rol — si no viene ninguno, CLIENTE por defecto
+        String nombreRol = (dto.getRol() != null && !dto.getRol().isBlank())
+                ? dto.getRol().toUpperCase()
+                : "CLIENTE";
+        // Lista blanca de roles autoasignables — ADMINISTRADOR queda excluido a propósito        
+        if (!nombreRol.equals("CLIENTE") && !nombreRol.equals("ENTRENADOR")) {
+            throw new RuntimeException("No es posible autoregistrarse con el rol: " + nombreRol);
+        }
 
+        Rol rol = rolRepository.findByNombreRol(nombreRol)
+                .orElseThrow(() -> new RuntimeException("Rol inválido: " + nombreRol));
         // Creamos la entidad desde cero
         Usuario usuario = new Usuario();
         usuario.setNombre(dto.getNombre());
@@ -73,6 +88,7 @@ public class UsuarioService {
         usuario.setTelefono(dto.getTelefono());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setEstado(EstadoUsuario.ACTIVO);
+        usuario.setRoles(List.of(rol));  
 
         // Guardamos en la base de datos
         Usuario guardado = usuarioRepository.save(usuario);
