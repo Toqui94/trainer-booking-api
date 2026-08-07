@@ -68,6 +68,7 @@ public class SecurityConfig {
                 // SOLO ENTRENADOR (crear servicios, ver sus pagos)
                 .requestMatchers(HttpMethod.GET, "/api/servicios/**").authenticated()
                 .requestMatchers("/api/servicios/**").hasAnyRole("ENTRENADOR", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.GET, "/api/horarios/**").authenticated()
                 .requestMatchers("/api/horarios/**").hasAnyRole("ENTRENADOR", "ADMINISTRADOR")
                 
                 // CLIENTE Y ADMIN (hacer reservas)

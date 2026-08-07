@@ -18,7 +18,7 @@ public class Horario {
     @Column(name = "id_horario")
     private Integer idHorario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_entrenador", nullable = false)
     private Entrenador entrenador;
 
