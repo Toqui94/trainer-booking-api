@@ -30,6 +30,11 @@ public class ReservaController {
         return reservaService.obtenerPorId(id);
     }
 
+    @GetMapping("/cliente/{idCliente}")
+    public List<ReservaResponseDTO> obtenerPorCliente(@PathVariable Integer idCliente) {
+        return reservaService.obtenerPorCliente(idCliente);
+    }
+
     @PostMapping
     public ResponseEntity<ReservaResponseDTO> crear(@Valid @RequestBody ReservaRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.crearReserva(dto));

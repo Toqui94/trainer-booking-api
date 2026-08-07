@@ -49,4 +49,9 @@ public class ClienteController {
         clienteService.eliminarCliente(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/usuario/{idUsuario}")
+    public ClienteResponseDTO obtenerPorIdUsuario(@PathVariable Integer idUsuario) {
+        return clienteService.obtenerPorIdUsuario(idUsuario);
+}
 }

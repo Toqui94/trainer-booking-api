@@ -78,6 +78,12 @@ public class ReservaService {
         return convertirADTO(reserva);
     }
 
+    public List<ReservaResponseDTO> obtenerPorCliente(Integer idCliente) {
+    return reservaRepository.findByClienteIdCliente(idCliente).stream()
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
     // ========== CREAR RESERVA (El método más importante) ==========
     @Transactional  // Si algo falla, TODO se revierte (atomicidad)
     public ReservaResponseDTO crearReserva(ReservaRequestDTO dto) {

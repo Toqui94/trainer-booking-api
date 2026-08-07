@@ -97,4 +97,10 @@ public class ClienteService {
         }
         clienteRepository.deleteById(id);
     }
+
+    public ClienteResponseDTO obtenerPorIdUsuario(Integer idUsuario) {
+    Cliente cliente = clienteRepository.findByUsuario_IdUsuario(idUsuario)
+            .orElseThrow(() -> new RecursoNoEncontradoException("No existe un perfil de cliente para el usuario con id: " + idUsuario));
+    return convertirADTO(cliente);
+}
 }

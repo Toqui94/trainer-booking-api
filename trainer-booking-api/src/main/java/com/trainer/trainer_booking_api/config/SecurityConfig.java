@@ -7,6 +7,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -65,6 +66,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/roles/**").hasRole("ADMINISTRADOR")
                 
                 // SOLO ENTRENADOR (crear servicios, ver sus pagos)
+                .requestMatchers(HttpMethod.GET, "/api/servicios/**").authenticated()
                 .requestMatchers("/api/servicios/**").hasAnyRole("ENTRENADOR", "ADMINISTRADOR")
                 .requestMatchers("/api/horarios/**").hasAnyRole("ENTRENADOR", "ADMINISTRADOR")
                 
